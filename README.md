@@ -137,7 +137,7 @@
 
 ## 📝 **Tutorial**
 Tutorial has been uploaded on YouTube
-- For mobile phone: https://www.youtube.com/watch?v=grVeZ76HlgA
+- For mobile phone: https://youtu.be/V_N_rHvBvx0?si=-ZNXW3POiMUFtKVd
 - For vps/windows: https://www.youtube.com/watch?v=uCbSYNQNEwY
   
 Summary instructions:
