@@ -3,43 +3,55 @@ const fs = require("fs-extra");
 const path = require("path");
 
 module.exports = {
-config: {
-name: "gen",
-version: "1.0",
-author: "Rifat | nxo_here",
-countDown: 5,
-role: 0,
-shortDescription: { en: "Generate image using prompt" },
-longDescription: { en: "Generate a new image based on your prompt." },
-category: "image",
-guide: { en: "{p}gen [prompt]" }
-},
+  config: {
+    name: "edit",
+    version: "1.0",
+    author: "RI F AT | NeoKEX",
+    countDown: 5,
+    role: 0,
+    shortDescription: "Edit image using prompt",
+    longDescription: "Edit an uploaded image based on your prompt.",
+    category: "AI-IMAGE",
+    guide: "{p}edit [prompt] (reply to image)"
+  },
 
-onStart: async function ({ args, message }) {
-const prompt = args.join(" ");
-if (!prompt) return message.reply("⚠️ | Please provide a prompt to generate an image.");
+  onStart: async function ({ api, event, args, message }) {
+    const prompt = args.join(" ");
+    const repliedImage = event.messageReply?.attachments?.[0];
 
-const imgPath = path.join(__dirname, "cache", `${Date.now()}_gen.jpg`);
-const waitMsg = await message.reply(`🎨 Generating image for: "${prompt}"...\nPlease wait...`);
+    if (!prompt || !repliedImage || repliedImage.type !== "photo") {
+      return message.reply("Please reply to a photo with your prompt to edit it.");
+    }
+    
+    api.setMessageReaction("🛠️", event.messageID, () => {}, true);
 
-try {
-const imageUrl = `https://edit-and-gen.onrender.com/gen?prompt=${encodeURIComponent(prompt)}`;
-const res = await axios.get(imageUrl, { responseType: "arraybuffer" });
+    const imgPath = path.join(__dirname, "cache", `${Date.now()}_edit.jpg`);
 
-await fs.ensureDir(path.dirname(imgPath));
-await fs.writeFile(imgPath, Buffer.from(res.data, "binary"));
+    try {
+      const imgURL = repliedImage.url;
+      const imageUrl = `https://edit-and-gen.onrender.com/gen?prompt=${encodeURIComponent(prompt)}&image=${encodeURIComponent(imgURL)}`;
+      const res = await axios.get(imageUrl, { responseType: "arraybuffer" });
 
-await message.reply({
-body: `✅ | Generated image for: "${prompt}"`,
-attachment: fs.createReadStream(imgPath)
-});
+      await fs.ensureDir(path.dirname(imgPath));
+      await fs.writeFile(imgPath, Buffer.from(res.data, "binary"));
 
-} catch (err) {
-console.error("GEN Error:", err);
-message.reply("❌ | Failed to generate image. Please try again later.");
-} finally {
-await fs.remove(imgPath);
-message.unsend(waitMsg.messageID);
-}
-}
+      message.reply({
+        body: `✅ Edited image for: "${prompt}"`,
+        attachment: fs.createReadStream(imgPath)
+      });
+      
+      api.setMessageReaction("✅", event.messageID, () => {}, true);
+
+    } catch (err) {
+      console.error("EDIT Error:", err);
+      message.reply("Failed to edit image. Please try again later.");
+      
+      api.setMessageReaction("❌", event.messageID, () => {}, true);
+      
+    } finally {
+      if (fs.existsSync(imgPath)) {
+        await fs.remove(imgPath);
+      }
+    }
+  }
 };
