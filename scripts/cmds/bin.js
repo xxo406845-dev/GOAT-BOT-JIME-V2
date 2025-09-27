@@ -5,7 +5,7 @@ const path = require("path");
 module.exports = {
   config: {
     name: "pastebin",
-    aliases: ["pb"],
+    aliases: ["bin"],
     version: "1.4",
     author: "NeoKEX", // Don't try to change the author name otherwise I'll fvckyourmom
     countDown: 5,
