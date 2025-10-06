@@ -1,13 +1,13 @@
 const axios = require('axios');
 const baseApiUrl = async () => {
-    return "https://noobs-api.top/dipto";
+    return "http://www.noobs-api.rf.gd/dipto"//base.data.api;
 };
 
 module.exports.config = {
     name: "bby",
     aliases: ["baby", "bbe", "babe", "sam", "bot", "chat"],
     version: "6.9.0",
-    author: "dipto | nexo_here",
+    author: "dipto",
     countDown: 0,
     role: 0,
     description: "better than all sim simi",
