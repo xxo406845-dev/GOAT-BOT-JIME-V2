@@ -80,7 +80,7 @@ module.exports = {
       fs.writeFileSync(filePath, Buffer.from(file.data, "binary"));
 
       api.sendMessage({
-        body: `Title: ${title}\nPlatform: ${result.platform}\nDuration: ${result.duration} seconds`,
+        body: `${title}\nPlatform: ${result.platform}\nDuration: ${result.duration} seconds`,
         attachment: fs.createReadStream(filePath)
       }, event.threadID, () => {
         fs.unlinkSync(filePath);
