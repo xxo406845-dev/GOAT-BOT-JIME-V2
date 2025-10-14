@@ -1,179 +1,251 @@
-const axios = require('axios');
-const baseApiUrl = async () => {
-    return "http://www.noobs-api.rf.gd/dipto"//base.data.api;
-};
+const axios = require("axios");
+const simsim = "https://simsimi.cyberbot.top";
 
-module.exports.config = {
-    name: "bby",
-    aliases: ["baby", "bbe", "babe", "sam", "bot", "chat"],
-    version: "6.9.0",
-    author: "dipto",
+module.exports = {
+  config: {
+    name: "baby",
+    version: "1.0.3",
+    author: "ULLASH (Modified By Akash) ",
     countDown: 0,
     role: 0,
-    description: "better than all sim simi",
-    category: "chat",
+    shortDescription: "Cute AI Baby Chatbot",
+    longDescription: "Talk, Teach & Chat with Emotion — Baby AI chatbot powered by SimSimi API",
+    category: "fun",
     guide: {
-        en: "{pn} [anyMessage] OR\nteach [YourMessage] - [Reply1], [Reply2], [Reply3]... OR\nteach [react] [YourMessage] - [react1], [react2], [react3]... OR\nremove [YourMessage] OR\nrm [YourMessage] - [indexNumber] OR\nmsg [YourMessage] OR\nlist OR \nall OR\nedit [YourMessage] - [NewMessage]"
+      en: "{p}baby [message]\n{p}baby teach [Question] - [Answer]\n{p}baby edit [Question] - [OldReply] - [NewReply]\n{p}baby remove [Question] - [Reply]\n{p}baby list"
     }
-};
+  },
 
-module.exports.onStart = async ({ api, event, args, usersData }) => {
-    const link = `${await baseApiUrl()}/baby`;
-    const dipto = args.join(" ").toLowerCase();
-    const uid = event.senderID;
-    let command, comd, final;
-
+  // ─────────────── MAIN COMMAND ───────────────
+  onStart: async function ({ api, event, args, message, usersData }) {
     try {
-        if (!args[0]) {
-            const ran = ["Bolo baby", "hum", "type help baby", "type !baby hi"];
-            return api.sendMessage(ran[Math.floor(Math.random() * ran.length)], event.threadID, event.messageID);
-        }
+      const senderID = event.senderID;
+      const senderName = await usersData.getName(senderID);
+      const query = args.join(" ").toLowerCase();
 
-        if (args[0] === 'remove') {
-            const fina = dipto.replace("remove ", "");
-            const dat = (await axios.get(`${link}?remove=${encodeURIComponent(fina)}&senderID=${uid}`)).data.message;
-            return api.sendMessage(dat, event.threadID, event.messageID);
-        }
-
-        if (args[0] === 'rm' && dipto.includes('-')) {
-            const [fi, f] = dipto.replace("rm ", "").split(/\s*-\s*/);
-            const da = (await axios.get(`${link}?remove=${encodeURIComponent(fi)}&index=${f}`)).data.message;
-            return api.sendMessage(da, event.threadID, event.messageID);
-        }
-
-        if (args[0] === 'list') {
-            if (args[1] === 'all') {
-                const data = (await axios.get(`${link}?list=all`)).data;
-                const limit = parseInt(args[2]) || 100;
-                const limited = data?.teacher?.teacherList?.slice(0, limit);
-                const teachers = await Promise.all(limited.map(async (item) => {
-                    const number = Object.keys(item)[0];
-                    const value = item[number];
-                    const name = await usersData.getName(number).catch(() => number) || "Not found";
-                    return { name, value };
-                }));
-                teachers.sort((a, b) => b.value - a.value);
-                const output = teachers.map((t, i) => `${i + 1}/ ${t.name}: ${t.value}`).join('\n');
-                return api.sendMessage(`Total Teach = ${data.length}\n👑 | List of Teachers of baby\n${output}`, event.threadID, event.messageID);
-            } else {
-                const d = (await axios.get(`${link}?list=all`)).data;
-                return api.sendMessage(`❇️ | Total Teach = ${d.length || "api off"}\n♻️ | Total Response = ${d.responseLength || "api off"}`, event.threadID, event.messageID);
-            }
-        }
-
-        if (args[0] === 'msg') {
-            const fuk = dipto.replace("msg ", "");
-            const d = (await axios.get(`${link}?list=${encodeURIComponent(fuk)}`)).data.data;
-            return api.sendMessage(`Message ${fuk} = ${d}`, event.threadID, event.messageID);
-        }
-
-        if (args[0] === 'edit') {
-            const parts = dipto.split(/\s*-\s*/);
-            if (parts.length < 2) return api.sendMessage('❌ | Invalid format! Use edit [YourMessage] - [NewReply]', event.threadID, event.messageID);
-            const dA = (await axios.get(`${link}?edit=${encodeURIComponent(args[1])}&replace=${encodeURIComponent(parts[1])}&senderID=${uid}`)).data.message;
-            return api.sendMessage(`changed ${dA}`, event.threadID, event.messageID);
-        }
-
-        if (args[0] === 'teach' && args[1] === 'react') {
-            const parts = dipto.replace("teach react ", "").split(/\s*-\s*/);
-            if (parts.length < 2) return api.sendMessage('❌ | Invalid format! Use: teach react message - ❤️, 😀', event.threadID, event.messageID);
-            const msg = parts[0].trim();
-            const reacts = parts[1].trim();
-            const res = await axios.get(`${link}?teach=${encodeURIComponent(msg)}&react=${encodeURIComponent(reacts)}`);
-            return api.sendMessage(`✅ Reacts added: ${res.data.message}`, event.threadID, event.messageID);
-        }
-
-        if (args[0] === 'teach' && args[1] === 'amar') {
-            const parts = dipto.split(/\s*-\s*/);
-            if (parts.length < 2) return api.sendMessage('❌ | Invalid format! Use: teach amar message - reply', event.threadID, event.messageID);
-            const msg = parts[0].replace("teach amar ", "").trim();
-            const reply = parts[1].trim();
-            const res = await axios.get(`${link}?teach=${encodeURIComponent(msg)}&senderID=${uid}&reply=${encodeURIComponent(reply)}&key=intro`);
-            return api.sendMessage(`✅ Intro reply added: ${res.data.message}`, event.threadID, event.messageID);
-        }
-
-        if (args[0] === 'teach' && args[1] !== 'amar' && args[1] !== 'react') {
-            const parts = dipto.split(/\s*-\s*/);
-            if (parts.length < 2) return api.sendMessage('❌ | Invalid format! Use: teach message - reply1, reply2', event.threadID, event.messageID);
-            const msg = parts[0].replace("teach ", "").trim();
-            const replies = parts[1].trim();
-            const res = await axios.get(`${link}?teach=${encodeURIComponent(msg)}&reply=${encodeURIComponent(replies)}&senderID=${uid}&threadID=${event.threadID}`);
-            const teacherName = (await usersData.get(res.data.teacher)).name || "Unknown";
-            return api.sendMessage(`✅ Replies added: ${res.data.message}\n👤 Teacher: ${teacherName}\n📚 Total Teachs: ${res.data.teachs}`, event.threadID, event.messageID);
-        }
-
-        if (dipto.includes('amar name ki') || dipto.includes('amr nam ki') || dipto.includes('amar nam ki') || dipto.includes('amr name ki') || dipto.includes('whats my name')) {
-            const data = (await axios.get(`${link}?text=${encodeURIComponent("amar name ki")}&senderID=${uid}&key=intro`)).data.reply;
-            return api.sendMessage(data, event.threadID, event.messageID);
-        }
-
-        const d = (await axios.get(`${link}?text=${encodeURIComponent(dipto)}&senderID=${uid}`)).data.reply;
-        api.sendMessage(d, event.threadID, (error, info) => {
+      if (!query) {
+        const ran = ["Bolo baby", "hum"];
+        const r = ran[Math.floor(Math.random() * ran.length)];
+        return message.reply(r, (err, info) => {
+          if (!err) {
             global.GoatBot.onReply.set(info.messageID, {
-                commandName: this.config.name,
-                type: "reply",
-                messageID: info.messageID,
-                author: event.senderID,
-                d,
-                apiUrl: link
+              commandName: "baby",
+              author: senderID
             });
-        }, event.messageID);
+          }
+        });
+      }
 
-    } catch (e) {
-        console.log(e);
-        api.sendMessage("Check console for error", event.threadID, event.messageID);
-    }
-};
+      // remove
+      if (["remove", "rm"].includes(args[0])) {
+        const parts = query.replace(/^(remove|rm)\s*/, "").split(" - ");
+        if (parts.length < 2)
+          return message.reply("Use: baby remove [Question] - [Reply]");
+        const [ask, ans] = parts;
+        const res = await axios.get(`${simsim}/delete?ask=${encodeURIComponent(ask)}&ans=${encodeURIComponent(ans)}`);
+        return message.reply(res.data.message);
+      }
 
-module.exports.onReply = async ({ api, event, Reply }) => {
-    try {
-        if (event.type == "message_reply") {
-            const a = (await axios.get(`${await baseApiUrl()}/baby?text=${encodeURIComponent(event.body?.toLowerCase())}&senderID=${event.senderID}`)).data.reply;
-            await api.sendMessage(a, event.threadID, (error, info) => {
-                global.GoatBot.onReply.set(info.messageID, {
-                    commandName: this.config.name,
-                    type: "reply",
-                    messageID: info.messageID,
-                    author: event.senderID,
-                    a
-                });
-            }, event.messageID);
-        }
-    } catch (err) {
-        return api.sendMessage(`Error: ${err.message}`, event.threadID, event.messageID);
-    }
-};
+      // list
+      if (args[0] === "list") {
+        const res = await axios.get(`${simsim}/list`);
+        if (res.data.code === 200)
+          return message.reply(`♾ Total Questions: ${res.data.totalQuestions}\n★ Replies: ${res.data.totalReplies}\n☠︎︎ Developer: ${res.data.author}`);
+        else
+          return message.reply(`Error: ${res.data.message || "Failed to fetch list"}`);
+      }
 
-module.exports.onChat = async ({ api, event, message }) => {
-    try {
-        const body = event.body ? event.body.toLowerCase() : "";
-        if (body.startsWith("baby") || body.startsWith("bby") || body.startsWith("bot") || body.startsWith("jan") || body.startsWith("babu") || body.startsWith("janu")) {
-            const arr = body.replace(/^\S+\s*/, "");
-            const randomReplies = ["Bol 🐸", "Bol suntechi 🐍", "Dakis ken 😾?", "Bolo jaan ki korte pari tomar jonno 😞"];
-            if (!arr) {
-                await api.sendMessage(randomReplies[Math.floor(Math.random() * randomReplies.length)], event.threadID, (error, info) => {
-                    if (!info) message.reply("info obj not found");
-                    global.GoatBot.onReply.set(info.messageID, {
-                        commandName: this.config.name,
-                        type: "reply",
-                        messageID: info.messageID,
-                        author: event.senderID
-                    });
-                }, event.messageID);
-                return;
+      // edit
+      if (args[0] === "edit") {
+        const parts = query.replace("edit ", "").split(" - ");
+        if (parts.length < 3)
+          return message.reply("Use: baby edit [Question] - [OldReply] - [NewReply]");
+        const [ask, oldReply, newReply] = parts;
+        const res = await axios.get(`${simsim}/edit?ask=${encodeURIComponent(ask)}&old=${encodeURIComponent(oldReply)}&new=${encodeURIComponent(newReply)}`);
+        return message.reply(res.data.message);
+      }
+
+      // teach
+      if (args[0] === "teach") {
+        const parts = query.replace("teach ", "").split(" - ");
+        if (parts.length < 2)
+          return message.reply("Use: baby teach [Question] - [Reply]");
+        const [ask, ans] = parts;
+        const res = await axios.get(`${simsim}/teach?ask=${encodeURIComponent(ask)}&ans=${encodeURIComponent(ans)}&senderID=${senderID}&senderName=${encodeURIComponent(senderName)}`);
+        return message.reply(res.data.message || "Reply added successfully!");
+      }
+
+      // normal message
+      const res = await axios.get(`${simsim}/simsimi?text=${encodeURIComponent(query)}&senderName=${encodeURIComponent(senderName)}`);
+      const responses = Array.isArray(res.data.response) ? res.data.response : [res.data.response];
+
+      for (const reply of responses) {
+        await new Promise((resolve) => {
+          message.reply(reply, (err, info) => {
+            if (!err) {
+              global.GoatBot.onReply.set(info.messageID, {
+                commandName: "baby",
+                author: senderID
+              });
             }
-            const a = (await axios.get(`${await baseApiUrl()}/baby?text=${encodeURIComponent(arr)}&senderID=${event.senderID}`)).data.reply;
-            await api.sendMessage(a, event.threadID, (error, info) => {
-                global.GoatBot.onReply.set(info.messageID, {
-                    commandName: this.config.name,
-                    type: "reply",
-                    messageID: info.messageID,
-                    author: event.senderID,
-                    a
-                });
-            }, event.messageID);
-        }
+            resolve();
+          });
+        });
+      }
+
     } catch (err) {
-        return api.sendMessage(`Error: ${err.message}`, event.threadID, event.messageID);
+      console.error(err);
+      message.reply(`Error in baby command: ${err.message}`);
     }
+  },
+
+  // ─────────────── HANDLE REPLY ───────────────
+  onReply: async function ({ api, event, Reply, message, usersData }) {
+    try {
+      const senderName = await usersData.getName(event.senderID);
+      const replyText = event.body ? event.body.toLowerCase() : "";
+      if (!replyText) return;
+
+      const res = await axios.get(`${simsim}/simsimi?text=${encodeURIComponent(replyText)}&senderName=${encodeURIComponent(senderName)}`);
+      const responses = Array.isArray(res.data.response) ? res.data.response : [res.data.response];
+
+      for (const reply of responses) {
+        await new Promise((resolve) => {
+          message.reply(reply, (err, info) => {
+            if (!err) {
+              global.GoatBot.onReply.set(info.messageID, {
+                commandName: "baby",
+                author: event.senderID
+              });
+            }
+            resolve();
+          });
+        });
+      }
+
+    } catch (err) {
+      console.error(err);
+      message.reply(`Error in baby reply: ${err.message}`);
+    }
+  },
+
+  // ─────────────── AUTO CHAT TRIGGER ───────────────
+  onChat: async function ({ api, event, message, usersData }) {
+    try {
+      const raw = event.body ? event.body.toLowerCase().trim() : "";
+      if (!raw) return;
+
+      const senderName = await usersData.getName(event.senderID);
+      const senderID = event.senderID;
+
+      // যদি শুধু “baby”, “bot” ইত্যাদি বলে
+      if (["baby", "bot", "bby", "jannu", "xan", "বেপি", "বট", "বেবি"].includes(raw)) {
+        const greetings = [
+          "বেশি bot Bot করলে leave নিবো কিন্তু😒😒",
+    "শুনবো না😼 তুমি আমার বস আকাশ কে প্রেম করাই দাও নাই🥺পচা তুমি🥺",
+    "আমি আবাল দের সাথে কথা বলি না,ok😒",
+    "এতো ডেকো না,প্রেম এ পরে যাবো তো🙈",
+    "Bolo Babu, তুমি কি আমার বস আকাশ কে ভালোবাসো? 🙈💋",
+    "বার বার ডাকলে মাথা গরম হয়ে যায় কিন্তু😑",
+    "হ্যা বলো😒, তোমার জন্য কি করতে পারি😐😑?",
+    "এতো ডাকছিস কেন?গালি শুনবি নাকি? 🤬",
+    "I love you janu🥰",
+    "আরে Bolo আমার জান ,কেমন আছো?😚",
+    "আজ বট বলে অসম্মান করছি,😰😿",
+    "Hop beda😾,Boss বল boss😼",
+    "চুপ থাক ,নাই তো তোর দাত ভেগে দিবো কিন্তু",
+    "আমাকে না ডেকে মেয়ে হলে বস আকাশ এর ইনবক্সে চলে যা 🌚😂 𝐅𝐚𝐜𝐞𝐛𝐨𝐨𝐤 𝐋𝐢𝐧𝐤 : https://www.facebook.com/arakashiam",
+    "আমাকে বট না বলে , বস আকাশ কে জানু বল জানু 😘",
+    "বার বার Disturb করছিস কোনো😾,আমার জানুর সাথে ব্যাস্ত আছি😋",
+    "আরে বলদ এতো ডাকিস কেন🤬",
+    "আমাকে ডাকলে ,আমি কিন্তু কিস করে দিবো😘",
+    "আমারে এতো ডাকিস না আমি মজা করার mood এ নাই এখন😒",
+    "হ্যাঁ জানু , এইদিক এ আসো কিস দেই🤭 😘",
+    "দূরে যা, তোর কোনো কাজ নাই, শুধু bot bot করিস 😉😋🤣",
+    "তোর কথা তোর বাড়ি কেউ শুনে না ,তো আমি কোনো শুনবো ?🤔😂",
+    "আমাকে ডেকো না,আমি বস আকাশ এর সাথে ব্যাস্ত আছি",
+    "কি হলো , মিস্টেক করচ্ছিস নাকি🤣",
+    "বলো কি বলবা, সবার সামনে বলবা নাকি?🤭🤏",
+    "জান মেয়ে হলে বস আকাশ এর ইনবক্সে চলে যাও 😍🫣💕 𝐅𝐚𝐜𝐞𝐛𝐨𝐨𝐤 𝐋𝐢𝐧𝐤 : https://www.facebook.com/arakashiam",
+    "কালকে দেখা করিস তো একটু 😈",
+    "হা বলো, শুনছি আমি 😏",
+    "আর কত বার ডাকবি ,শুনছি তো",
+    "হুম বলো কি বলবে😒",
+    "বলো কি করতে পারি তোমার জন্য",
+    "আমি তো অন্ধ কিছু দেখি না🐸 😎",
+    "আরে বোকা বট না জানু বল জানু😌",
+    "বলো জানু 🌚",
+    "তোর কি চোখে পড়ে না আমি ব্যাস্ত আছি😒",
+    "হুম জান তোমার ওই খানে উম্মহ😑😘",
+    "আহ শুনা আমার তোমার অলিতে গলিতে উম্মাহ😇😘",
+    "jang hanga korba😒😬",
+    "হুম জান তোমার অইখানে উম্মমাহ😷😘",
+    "আসসালামু আলাইকুম বলেন আপনার জন্য কি করতে পারি..!🥰",
+    "ভালোবাসার নামক আবলামি করতে চাইলে বস আকাশ এর ইনবক্সে গুতা দিন ~🙊😘🤣 𝐅𝐚𝐜𝐞𝐛𝐨𝐨𝐤 𝐋𝐢𝐧𝐤 : https://www.facebook.com/arakashiam",
+    "আমাকে এতো না ডেকে বস আকাশ এর কে একটা গফ দে 🙄",
+    "আমাকে এতো না ডেকছ কেন ভলো টালো বাসো নাকি🤭🙈",
+    "🌻🌺💚-আসসালামু আলাইকুম ওয়া রাহমাতুল্লাহ-💚🌺🌻",
+    "আমি এখন বস আকাশ এর সাথে বিজি আছি আমাকে ডাকবেন না-😕😏 ধন্যবাদ-🤝🌻",
+    "আমাকে না ডেকে আমার বস আকাশ কে একটা জি এফ দাও-😽🫶🌺",
+    "ঝাং থুমালে আইলাপিউ পেপি-💝😽",
+    "উফফ বুঝলাম না এতো ডাকছেন কেনো-😤😡😈",
+    "জান তোমার বান্ধবী রে আমার বস আকাশ এর হাতে তুলে দিবা-🙊🙆‍♂",
+    "আজকে আমার মন ভালো নেই তাই আমারে ডাকবেন না-😪🤧",
+    "ঝাং 🫵থুমালে য়ামি রাইতে পালুপাসি উম্মম্মাহ-🌺🤤💦",
+    "চুনা ও চুনা আমার বস আকাশ এর হবু বউ রে কেও দেকছো খুজে পাচ্ছি না😪🤧😭",
+    "স্বপ্ন তোমারে নিয়ে দেখতে চাই তুমি যদি আমার হয়ে থেকে যাও-💝🌺🌻",
+    "জান হাঙ্গা করবা-🙊😝🌻",
+    "জান মেয়ে হলে চিপায় আসো বস আকাশ এর থেকে অনেক ভালোবাসা শিখছি তোমার জন্য-🙊🙈😽",
+    "ইসস এতো ডাকো কেনো লজ্জা লাগে তো-🙈🖤🌼",
+    "আমার বস আকাশ এর পক্ষ থেকে তোমারে এতো এতো ভালোবাসা-🥰😽🫶 আমার বস আকাশ ইসলামে'র জন্য দোয়া করবেন-💝💚🌺🌻",
+    "- ভালোবাসা নামক আব্লামি করতে মন চাইলে আমার বস আকাশ এর ইনবক্স চলে যাও-🙊🥱👅 🌻𝐅𝐀𝐂𝐄𝐁𝐎𝐎𝐊 𝐈𝐃 𝐋𝐈𝐍𝐊 🌻:- https://www.facebook.com/arakashiam",
+    "আমার জান তুমি শুধু আমার আমি তোমারে ৩৬৫ দিন ভালোবাসি-💝🌺😽",
+    "কিরে প্রেম করবি তাহলে বস আকাশ এর ইনবক্সে গুতা দে 😘🤌 𝐅𝐚𝐜𝐞𝐛𝐨𝐨𝐤 𝐋𝐢𝐧𝐤 : https://www.facebook.com/arakashiam",
+    "জান আমার বস আকাশ কে বিয়ে করবা-🙊😘🥳",
+    // ... এভাবে পুরো লিস্টে সব লিঙ্কই এখন https://www.facebook.com/arakashiam
+];
+
+        const randomReply = greetings[Math.floor(Math.random() * greetings.length)];
+        message.reply({
+          body: `@${senderName} ${randomReply}`,
+          mentions: [{ tag: `@${senderName}`, id: senderID }]
+        }, (err, info) => {
+          if (!err) {
+            global.GoatBot.onReply.set(info.messageID, {
+              commandName: "baby",
+              author: senderID
+            });
+          }
+        });
+      }
+
+      // যদি baby + query হয়
+      const prefixes = ["baby ", "bot ", "bby ", "jannu ", "xan ", "বেপি ", "বট ", "বেবি "];
+      const prefixMatch = prefixes.find(p => raw.startsWith(p));
+      if (prefixMatch) {
+        const query = raw.replace(prefixMatch, "").trim();
+        if (!query) return;
+
+        const res = await axios.get(`${simsim}/simsimi?text=${encodeURIComponent(query)}&senderName=${encodeURIComponent(senderName)}`);
+        const responses = Array.isArray(res.data.response) ? res.data.response : [res.data.response];
+
+        for (const reply of responses) {
+          await new Promise((resolve) => {
+            message.reply(reply, (err, info) => {
+              if (!err) {
+                global.GoatBot.onReply.set(info.messageID, {
+                  commandName: "baby",
+                  author: senderID
+                });
+              }
+              resolve();
+            });
+          });
+        }
+      }
+
+    } catch (err) {
+      console.error(err);
+    }
+  }
 };
